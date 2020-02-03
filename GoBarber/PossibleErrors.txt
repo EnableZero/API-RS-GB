@@ -1,0 +1,5 @@
+Using Postbird - Errors encountered
+
+> Use machine ip instead of 'localhost' as Host ( run on terminal: docker-machine ip to get the ip). 'localhost' doesn't seem to work.
+
+> If  'A connection attempt failed because the connected party....' : Virtual Machine stopped working , restart. (Use Kitematic). 
