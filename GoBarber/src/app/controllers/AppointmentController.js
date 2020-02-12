@@ -3,7 +3,8 @@ import User from '../models/User';
 import File from '../models/File';
 import Notification from '../schemas/Notification';
 
-import mail from '../../lib/Mail';
+import Queue from '../../lib/Queue';
+import CancellationMail from '../jobs/CancellationMail';
 
 import * as Yup from 'yup';
 import { startOfHour, parseISO, isBefore,format, subHours} from 'date-fns';
@@ -20,7 +21,7 @@ class AppointmentController {
                         order: ['date'],
                         limit:20,
                         offset: (page -1)* 20,
-                        attributes: ['id','date'],
+                        attributes: ['id','date', 'past','cancelable'],
                         include: [
                                 {
                                         model:User,
@@ -160,19 +161,8 @@ class AppointmentController {
 
                 await appointment.save();
 
-                await mail.sendMail({
-                        to: `${appointment.provider.name} <${appointment.provider.email}>`,
-                        subject: 'Agendamento cancelado',
-                        template: 'cancelation',
-                        context: {
-                                provider: appointment.provider.name,
-                                user: appointment.user.name,
-                                date:format(
-                                        appointment.date,
-                                        " 'dia' dd 'de' MMMM', às' H:mm 'h' ",
-                                        { locale: pt }
-                                ),
-                        },
+                await Queue.add(CancellationMail.key, {
+                        appointment,
                 });
 
                 return res.json(appointment);
